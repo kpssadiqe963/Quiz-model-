@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Quiz System</title>
+
+<style>
+
+body{
+  margin:0;
+  padding:0;
+  font-family:Arial;
+  background:#f2f2f2;
+}
+
+.page{
+  display:none;
+  padding:20px;
+}
+
+.active{
+  display:block;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  margin-top:20px;
+}
+
+input, select, textarea, button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  box-sizing:border-box;
+  font-size:16px;
+}
+
+button{
+  background:#1976d2;
+  color:white;
+  border:none;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#125ea7;
+}
+
+.question-card{
+  background:white;
+  padding:15px;
+  margin-top:15px;
+  border-radius:10px;
+}
+
+.floating-btn{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  font-size:40px;
+  background:#4caf50;
+}
+
+.modal{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
+}
+
+.modal-content{
+  background:white;
+  padding:20px;
+  width:90%;
+  max-width:500px;
+  border-radius:10px;
+}
+
+.quiz-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  height:100vh;
+}
+
+.player-panel{
+  padding:10px;
+  box-sizing:border-box;
+  overflow:auto;
+  border-right:2px solid white;
+}
+
+.player1{
+  background:#ffebee;
+}
+
+.player2{
+  background:#e8f5e9;
+}
+
+.player3{
+  background:#e3f2fd;
+}
+
+.player4{
+  background:#fff3e0;
+}
+
+.player-name{
+  font-size:22px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.score{
+  font-size:20px;
+  text-align:center;
+  margin-top:10px;
+}
+
+.timer{
+  font-size:24px;
+  text-align:center;
+  color:red;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.counter{
+  text-align:center;
+  margin-top:10px;
+  font-size:18px;
+}
+
+.question{
+  margin-top:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+.option-btn{
+  margin-top:10px;
+  padding:15px;
+  border-radius:10px;
+  background:white;
+  color:black;
+  border:2px solid #ddd;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.correct{
+  background:#4caf50 !important;
+  color:white !important;
+}
+
+.wrong{
+  background:#f44336 !important;
+  color:white !important;
+}
+
+.finish-screen{
+  text-align:center;
+  padding-top:100px;
+}
+
+.score-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:20px;
+}
+
+.score-table th,
+.score-table td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:center;
+}
+
+</style>
+
+</head>
+<body>
+
+
+
+<!-- LOGIN -->
+
+<div id="loginPage" class="page active">
+
+  <div class="card">
+
+    <h2>Teacher Login</h2>
+
+    <input type="text"
+      id="teacherCode"
+      placeholder="Teacher Code">
+
+    <select id="subject">
+
+      <option>Mathematics</option>
+      <option>Science</option>
+      <option>English</option>
+
+    </select>
+
+    <button onclick="login()">
+      Login
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- DASHBOARD -->
+
+<div id="dashboardPage" class="page">
+
+  <div class="card">
+
+    <h2>Dashboard</h2>
+
+    <button onclick="openQuizSetup()">
+      Create Quiz
+    </button>
+
+    <button onclick="openConductQuizPage()">
+      Conduct Quiz
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- CREATE QUIZ -->
+
+<div id="createQuizPage" class="page">
+
+  <div class="card">
+
+    <h2 id="displayQuizName"></h2>
+
+    <p>
+      <b>Type:</b>
+      <span id="displayQuizType"></span>
+    </p>
+
+    <p>
+      <b>Questions Per Student:</b>
+      <span id="displayQuestionsPerStudent"></span>
+    </p>
+
+    <p>
+      <b>Time Per Question:</b>
+      <span id="displayTimePerQuestion"></span>
+      Seconds
+    </p>
+
+    <button id="finishQuizBtn"
+      onclick="finishQuiz()">
+      Finish Quiz
+    </button>
+
+  </div>
+
+  <div id="questionsList"></div>
+
+  <button class="floating-btn"
+    onclick="openQuestionModal()">
+    +
+  </button>
+
+</div>
+
+
+
+<!-- CONDUCT QUIZ -->
+
+<div id="conductQuizPage" class="page">
+
+  <div class="card">
+
+    <h2>Conduct Quiz</h2>
+
+    <select id="quizSelect"></select>
+
+    <button onclick="openStudentEntry()">
+      Start Quiz
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- STUDENT ENTRY -->
+
+<div id="studentEntryPage" class="page">
+
+  <div class="card">
+
+    <h2>Enter Student Names</h2>
+
+    <input type="text" id="student1" placeholder="Student 1">
+
+    <input type="text" id="student2" placeholder="Student 2">
+
+    <input type="text" id="student3" placeholder="Student 3">
+
+    <input type="text" id="student4" placeholder="Student 4">
+
+    <button id="beginQuizBtn"
+  onclick="startQuiz()">
+
+  Begin Quiz
+
+</button>
+  </div>
+
+</div>
+
+
+
+<!-- QUIZ PAGE -->
+
+<div id="quizPage" class="page">
+
+  <button
+    style="
+      position:fixed;
+      top:10px;
+      left:10px;
+      width:120px;
+      z-index:2000;
+      background:red;
+    "
+    onclick="goBackToStudents()">
+
+    Back
+
+  </button>
+
+  <div class="quiz-grid">
+
+    <div class="player-panel player1" id="panel0"></div>
+
+    <div class="player-panel player2" id="panel1"></div>
+
+    <div class="player-panel player3" id="panel2"></div>
+
+    <div class="player-panel player4" id="panel3"></div>
+
+  </div>
+
+</div>
+
+
+
+<!-- FINAL SCOREBOARD -->
+
+<div id="finalScorePage" class="page">
+
+  <div class="card">
+
+    <h2>Final Scoreboard</h2>
+
+    <table class="score-table">
+
+      <thead>
+
+        <tr>
+
+          <th>Student</th>
+          <th>Score</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="scoreTableBody"></tbody>
+
+    </table>
+
+    <button onclick="downloadScoreCard()">
+      Download Score Card
+    </button>
+
+    <button onclick="openStudentEntry()">
+      Next 4 Students
+    </button>
+
+    <button onclick="showPage('dashboardPage')">
+      Dashboard
+    </button>
+<button
+  style="background:red;margin-top:10px;"
+  onclick="endQuizSession()">
+
+  End Quiz
+
+</button>
+
+  </div>
+
+</div>
+
+
+
+<!-- QUIZ SETUP MODAL -->
+
+<div class="modal" id="quizSetupModal">
+
+  <div class="modal-content">
+
+    <h2>Create Quiz</h2>
+
+    <input type="text"
+      id="quizName"
+      placeholder="Quiz Name">
+
+    <select id="quizType">
+
+      <option value="common">
+        Common Questions
+      </option>
+
+      <option value="separate">
+        Separate Questions
+      </option>
+
+    </select>
+
+    <input type="number"
+      id="questionsPerStudent"
+      placeholder="Questions Per Student">
+
+    <input type="number"
+      id="timePerQuestion"
+      placeholder="Time Per Question (Seconds)">
+
+    <button onclick="startQuizCreation()">
+  Start Creating Quiz
+</button>
+
+  </div>
+
+</div>
+
+
+
+<!-- QUESTION MODAL -->
+
+<div class="modal" id="questionModal">
+
+  <div class="modal-content">
+
+    <h2>Add Question</h2>
+
+    <textarea id="questionText"
+      placeholder="Question"></textarea>
+
+    <input type="text"
+      id="option1"
+      placeholder="Option 1">
+
+    <input type="text"
+      id="option2"
+      placeholder="Option 2">
+
+    <input type="text"
+      id="option3"
+      placeholder="Option 3">
+
+    <input type="text"
+      id="option4"
+      placeholder="Option 4">
+
+    <select id="correctAnswer">
+
+      <option value="1">
+        Correct Answer - Option 1
+      </option>
+
+      <option value="2">
+        Correct Answer - Option 2
+      </option>
+
+      <option value="3">
+        Correct Answer - Option 3
+      </option>
+
+      <option value="4">
+        Correct Answer - Option 4
+      </option>
+
+    </select>
+
+    <button onclick="saveQuestion()">
+      Save Question
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<script>
+
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyNhw3EAzxNDLRQ-sNcncnXHu3ZvI0QamnNY63OfIKD3Wqtt0RZJ7OQDm-3xmECWl1trw/exec";
+
+
+
+let currentQuiz = {};
+
+let questions = [];
+
+let selectedQuizID = "";
+
+let quizQuestions = [];
+
+let players = [];
+
+let completedPlayers = 0;
+
+let finalScores = [];
+
+
+
+function showPage(pageId){
+
+  document.querySelectorAll(".page")
+    .forEach(page=>{
+      page.classList.remove("active");
+    });
+
+  document.getElementById(pageId)
+    .classList.add("active");
+
+}
+
+
+
+/* =========================
+   LOGIN
+========================= */
+
+function login(){
+
+  const code =
+    document.getElementById("teacherCode").value;
+
+  if(code==""){
+    alert("Enter Teacher Code");
+    return;
+  }
+
+  showPage("dashboardPage");
+
+}
+
+
+
+/* =========================
+   CREATE QUIZ
+========================= */
+
+function openQuizSetup(){
+
+  document.getElementById("quizSetupModal")
+    .style.display = "flex";
+
+}
+
+
+
+function startQuizCreation(){
+
+  currentQuiz = {
+
+    quizName:
+      document.getElementById("quizName").value,
+
+    quizType:
+      document.getElementById("quizType").value,
+
+    questionsPerStudent:
+      document.getElementById("questionsPerStudent").value,
+
+    timePerQuestion:
+      document.getElementById("timePerQuestion").value
+
+  };
+
+  document.getElementById("displayQuizName")
+    .innerText = currentQuiz.quizName;
+
+  document.getElementById("displayQuizType")
+    .innerText = currentQuiz.quizType;
+
+  document.getElementById("displayQuestionsPerStudent")
+    .innerText = currentQuiz.questionsPerStudent;
+
+  document.getElementById("displayTimePerQuestion")
+    .innerText = currentQuiz.timePerQuestion;
+
+  document.getElementById("quizSetupModal")
+    .style.display = "none";
+
+  showPage("createQuizPage");
+
+}
+
+
+
+function openQuestionModal(){
+
+  document.getElementById("questionModal")
+    .style.display = "flex";
+
+}
+
+
+
+function saveQuestion(){
+
+  const question = {
+
+    question:
+      document.getElementById("questionText").value,
+
+    option1:
+      document.getElementById("option1").value,
+
+    option2:
+      document.getElementById("option2").value,
+
+    option3:
+      document.getElementById("option3").value,
+
+    option4:
+      document.getElementById("option4").value,
+
+    correct:
+      document.getElementById("correctAnswer").value
+
+  };
+
+  questions.push(question);
+
+  renderQuestions();
+
+  clearQuestionForm();
+
+  document.getElementById("questionModal")
+    .style.display = "none";
+
+}
+
+
+
+function renderQuestions(){
+
+  const list =
+    document.getElementById("questionsList");
+
+  list.innerHTML = "";
+
+  questions.forEach((q,index)=>{
+
+    list.innerHTML += `
+
+      <div class="question-card">
+
+        <h3>
+          Question ${index+1}
+        </h3>
+
+        <p>${q.question}</p>
+
+      </div>
+
+    `;
+
+  });
+
+}
+
+
+
+function clearQuestionForm(){
+
+  document.getElementById("questionText").value = "";
+
+  document.getElementById("option1").value = "";
+
+  document.getElementById("option2").value = "";
+
+  document.getElementById("option3").value = "";
+
+  document.getElementById("option4").value = "";
+
+}
+
+
+
+async function finishQuiz(){
+
+  const btn =
+    document.getElementById("finishQuizBtn");
+
+  btn.disabled = true;
+
+  btn.innerText = "Saving...";
+
+  const data = {
+
+    action:"saveQuiz",
+
+    quizName:
+      currentQuiz.quizName,
+
+    subject:
+      document.getElementById("subject").value,
+
+    type:
+      currentQuiz.quizType,
+
+    questionsPerStudent:
+      currentQuiz.questionsPerStudent,
+
+    timePerQuestion:
+      currentQuiz.timePerQuestion,
+
+    questions: questions
+
+  };
+
+  await fetch(SCRIPT_URL,{
+
+    method:"POST",
+
+    body:JSON.stringify(data)
+
+  });
+
+  btn.innerText =
+    "Quiz Saved Successfully";
+
+  setTimeout(()=>{
+
+    btn.disabled = false;
+
+    btn.innerText = "Finish Quiz";
+
+    showPage("dashboardPage");
+
+  },1500);
+
+}
+
+
+
+/* =========================
+   CONDUCT QUIZ
+========================= */
+
+async function openConductQuizPage(){
+
+  showPage("conductQuizPage");
+
+  const response = await fetch(SCRIPT_URL,{
+
+    method:"POST",
+
+    body:JSON.stringify({
+
+      action:"getQuizzes"
+
+    })
+
+  });
+
+  const quizzes = await response.json();
+
+  const select =
+    document.getElementById("quizSelect");
+
+  select.innerHTML = "";
+
+  quizzes.forEach(q=>{
+
+    select.innerHTML += `
+
+      <option value="${q.quizID}">
+        ${q.quizName}
+      </option>
+
+    `;
+
+  });
+
+}
+
+
+
+function openStudentEntry(){
+
+  const select =
+    document.getElementById("quizSelect");
+
+  if(select){
+
+    selectedQuizID = select.value;
+
+  }
+
+  showPage("studentEntryPage");
+
+}
+
+
+
+async function startQuiz(){
+const btn =
+  document.getElementById("beginQuizBtn");
+
+btn.disabled = true;
+
+btn.innerText = "Loading...";
+
+await new Promise(resolve =>
+  setTimeout(resolve,50)
+);
+
+  completedPlayers = 0;
+if(!selectedQuizID){
+
+  alert("Please Select Quiz");
+
+  btn.disabled = false;
+
+  btn.innerText = "Begin Quiz";
+
+  return;
+
+}
+  const response = await fetch(SCRIPT_URL,{
+
+    method:"POST",
+
+    body:JSON.stringify({
+
+      action:"getQuestions",
+
+      quizID:selectedQuizID
+
+    })
+
+  });
+
+  quizQuestions = await response.json();
+if(!quizQuestions.length){
+
+  alert("No Questions Found");
+
+  btn.disabled = false;
+
+  btn.innerText = "Begin Quiz";
+
+  return;
+
+}
+  const questionLimit =
+    parseInt(
+      quizQuestions[0].questionsPerStudent
+    );
+
+  players = [
+
+    {
+      name:document.getElementById("student1").value,
+      score:0,
+      current:0,
+      timer:null,
+      timeLeft:
+        parseInt(
+          quizQuestions[0].timePerQuestion
+        ),
+      questions:getRandomQuestions(questionLimit)
+    },
+
+    {
+      name:document.getElementById("student2").value,
+      score:0,
+      current:0,
+      timer:null,
+      timeLeft:
+        parseInt(
+          quizQuestions[0].timePerQuestion
+        ),
+      questions:getRandomQuestions(questionLimit)
+    },
+
+    {
+      name:document.getElementById("student3").value,
+      score:0,
+      current:0,
+      timer:null,
+      timeLeft:
+        parseInt(
+          quizQuestions[0].timePerQuestion
+        ),
+      questions:getRandomQuestions(questionLimit)
+    },
+
+    {
+      name:document.getElementById("student4").value,
+      score:0,
+      current:0,
+      timer:null,
+      timeLeft:
+        parseInt(
+          quizQuestions[0].timePerQuestion
+        ),
+      questions:getRandomQuestions(questionLimit)
+    }
+
+  ];
+
+  showPage("quizPage");
+
+  renderAllPlayers();
+btn.disabled = false;
+
+btn.innerText = "Begin Quiz";
+
+}
+
+
+
+/* =========================
+   RENDER PLAYERS
+========================= */
+
+function renderAllPlayers(){
+
+  players.forEach((player,index)=>{
+
+    renderPlayer(index);
+
+  });
+
+}
+
+
+
+function renderPlayer(index){
+
+  const player = players[index];
+
+  const panel =
+    document.getElementById(`panel${index}`);
+
+  const q =
+    player.questions[player.current];
+
+
+
+  if(!q){
+
+    panel.innerHTML = `
+
+      <div class="finish-screen">
+
+        <h1>Finished</h1>
+
+        <h2>${player.name}</h2>
+
+        <h2>Score: ${player.score}</h2>
+
+      </div>
+
+    `;
+
+    completedPlayers++;
+
+    finalScores.push({
+
+      student:player.name,
+
+      score:player.score
+
+    });
+
+    savePlayerResult(player);
+
+    checkAllCompleted();
+
+    return;
+
+  }
+
+
+
+  player.timeLeft =
+    parseInt(
+      quizQuestions[0].timePerQuestion
+    );
+
+
+
+  panel.innerHTML = `
+
+    <div class="player-name">
+      ${player.name}
+    </div>
+
+    <div class="score">
+      Score: ${player.score}
+    </div>
+
+    <div class="counter">
+      Question ${player.current+1}
+      of
+      ${player.questions.length}
+    </div>
+
+    <div class="timer"
+      id="timer${index}">
+      ${player.timeLeft}
+    </div>
+
+    <div class="question">
+      ${q.question}
+    </div>
+
+    <button class="option-btn"
+      onclick="selectAnswer(${index},1,this)">
+      ${q.option1}
+    </button>
+
+    <button class="option-btn"
+      onclick="selectAnswer(${index},2,this)">
+      ${q.option2}
+    </button>
+
+    <button class="option-btn"
+      onclick="selectAnswer(${index},3,this)">
+      ${q.option3}
+    </button>
+
+    <button class="option-btn"
+      onclick="selectAnswer(${index},4,this)">
+      ${q.option4}
+    </button>
+
+  `;
+
+  startTimer(index);
+
+}
+
+
+
+/* =========================
+   TIMER
+========================= */
+
+function startTimer(index){
+
+  const player = players[index];
+
+  clearInterval(player.timer);
+
+  player.timer = setInterval(()=>{
+
+    player.timeLeft--;
+
+    const timer =
+      document.getElementById(`timer${index}`);
+
+    if(timer){
+
+      timer.innerText =
+        player.timeLeft;
+
+    }
+
+    if(player.timeLeft <= 0){
+
+      clearInterval(player.timer);
+
+      player.current++;
+
+      renderPlayer(index);
+
+    }
+
+  },1000);
+
+}
+
+
+
+/* =========================
+   ANSWERS
+========================= */
+
+function selectAnswer(playerIndex,selected,btn){
+
+  const player =
+    players[playerIndex];
+
+  const q =
+    player.questions[player.current];
+
+  clearInterval(player.timer);
+
+  if(selected == q.correct){
+
+    btn.classList.add("correct");
+
+    player.score++;
+
+  }
+
+  else{
+
+    btn.classList.add("wrong");
+
+  }
+
+  setTimeout(()=>{
+
+    player.current++;
+
+    renderPlayer(playerIndex);
+
+  },700);
+
+}
+
+
+
+/* =========================
+   COMPLETION
+========================= */
+
+function checkAllCompleted(){
+
+  if(completedPlayers >= 4){
+
+    renderFinalScoreboard();
+
+    showPage("finalScorePage");
+
+  }
+
+}
+
+
+
+function renderFinalScoreboard(){
+
+  const body =
+    document.getElementById("scoreTableBody");
+
+  body.innerHTML = "";
+
+  finalScores.forEach(s=>{
+
+    body.innerHTML += `
+
+      <tr>
+
+        <td>${s.student}</td>
+
+        <td>${s.score}</td>
+
+      </tr>
+
+    `;
+
+  });
+
+}
+
+
+
+/* =========================
+   SAVE RESULT
+========================= */
+
+async function savePlayerResult(player){
+
+  await fetch(SCRIPT_URL,{
+
+    method:"POST",
+
+    body:JSON.stringify({
+
+      action:"saveResult",
+
+      quizID:selectedQuizID,
+
+      student:player.name,
+
+      score:player.score
+
+    })
+
+  });
+
+}
+
+
+
+/* =========================
+   DOWNLOAD PDF
+========================= */
+
+async function downloadScoreCard(){
+
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+
+  doc.text("Quiz Score Card",20,20);
+
+  let y = 40;
+
+  finalScores.forEach((s,index)=>{
+
+    doc.text(
+      `${index+1}. ${s.student} - ${s.score}`,
+      20,
+      y
+    );
+
+    y += 10;
+
+  });
+
+  doc.save("scorecard.pdf");
+
+}
+
+
+
+/* =========================
+   HELPERS
+========================= */
+
+function shuffleArray(array){
+
+  for(let i=array.length-1;i>0;i--){
+
+    const j =
+      Math.floor(Math.random()*(i+1));
+
+    [array[i],array[j]] =
+    [array[j],array[i]];
+
+  }
+
+  return array;
+
+}
+
+function goBackToStudents(){
+
+  players.forEach(player=>{
+
+    clearInterval(player.timer);
+
+  });
+
+  showPage("studentEntryPage");
+
+}
+function endQuizSession(){
+
+  players.forEach(player=>{
+
+    clearInterval(player.timer);
+
+  });
+
+  players = [];
+
+  quizQuestions = [];
+
+  finalScores = [];
+
+  completedPlayers = 0;
+
+  selectedQuizID = "";
+
+  document.getElementById("scoreTableBody")
+    .innerHTML = "";
+
+  showPage("dashboardPage");
+
+}
+
+function getRandomQuestions(limit){
+
+  let shuffled =
+    shuffleArray([...quizQuestions]);
+
+  return shuffled.slice(0,limit);
+
+}
+
+</script>
+
+</body>
+</html>
