@@ -1056,26 +1056,17 @@ function renderPlayer(index){
     </div>
 
     <button class="option-btn"
-      onclick="selectAnswer(${index},1,this)">
-      ${q.option1}
-    </button>
+  onpointerdown="selectAnswer(${index},1,this)">
 
     <button class="option-btn"
-      onclick="selectAnswer(${index},2,this)">
-      ${q.option2}
-    </button>
+  onpointerdown="selectAnswer(${index},2,this)">
 
     <button class="option-btn"
-      onclick="selectAnswer(${index},3,this)">
-      ${q.option3}
-    </button>
+  onpointerdown="selectAnswer(${index},3,this)">
 
-    <button class="option-btn"
-      onclick="selectAnswer(${index},4,this)">
-      ${q.option4}
-    </button>
-
-  `;
+   <button class="option-btn"
+  onpointerdown="selectAnswer(${index},4,this)">
+ `;
 
   startTimer(index);
 
